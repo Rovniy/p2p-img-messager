@@ -49,7 +49,7 @@ jobs:
           username: ${{ secrets.BOT_SERVER_USERNAME }}
           key: ${{ secrets.BOT_SERVER_SSH_KEY }}
           script: |
-            cp /etc/nginx/sites-available/msg.xploit.ltd /etc/nginx/sites-available/msg.xploit.ltd.backup
+            cp /etc/nginx/sites-available/p2p-msg-api.xploit.ltd /etc/nginx/sites-available/p2p-msg-api.xploit.ltd.backup
 
       - name: Update Nginx configuration
         uses: appleboy/ssh-action@master
@@ -58,8 +58,8 @@ jobs:
           username: ${{ secrets.BOT_SERVER_USERNAME }}
           key: ${{ secrets.BOT_SERVER_SSH_KEY }}
           script: |
-            cp /home/p2p_img_messager/nginx.nginx /etc/nginx/sites-available/msg.xploit.ltd
-            ln -sf /etc/nginx/sites-available/msg.xploit.ltd /etc/nginx/sites-enabled/msg.xploit.ltd
+            cp /home/p2p_img_messager/nginx.nginx /etc/nginx/sites-available/p2p-msg-api.xploit.ltd
+            ln -sf /etc/nginx/sites-available/p2p-msg-api.xploit.ltd /etc/nginx/sites-enabled/p2p-msg-api.xploit.ltd
 
       - name: Test Nginx configuration
         id: nginx_test
@@ -79,7 +79,7 @@ jobs:
           username: ${{ secrets.BOT_SERVER_USERNAME }}
           key: ${{ secrets.BOT_SERVER_SSH_KEY }}
           script: |
-            cp /etc/nginx/sites-available/msg.xploit.ltd.backup /etc/nginx/sites-available/msg.xploit.ltd
+            cp /etc/nginx/sites-available/p2p-msg-api.xploit.ltd.backup /etc/nginx/sites-available/p2p-msg-api.xploit.ltd
             sudo nginx -t && sudo systemctl restart nginx
 
       - name: Restart Nginx

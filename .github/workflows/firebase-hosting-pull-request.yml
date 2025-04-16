@@ -21,7 +21,7 @@ jobs:
           NODE_ENV: production
         run: |
           cd ./web
-          npm ci
+          npm i
           npm run build
 
       - name: Deploy hosting
