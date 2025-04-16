@@ -17,10 +17,7 @@ jobs:
       - name: Generate
         env:
           NODE_ENV: production
-        run: |
-          cd ./web
-          npm i
-          npm run build
+        run: cd ./web && npm i && npm run build
 
       - name: Deploy hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
