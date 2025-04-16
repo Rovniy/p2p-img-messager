@@ -108,7 +108,7 @@ jobs:
           username: ${{ secrets.BOT_SERVER_USERNAME }}
           key: ${{ secrets.BOT_SERVER_SSH_KEY }}
           script: |
-            cd /home/p2p_img_messager
+            cd /home/p2p_img_messager/server
             docker-compose stop p2p_img_messager
             docker-compose pull p2p_img_messager
             docker-compose up -d

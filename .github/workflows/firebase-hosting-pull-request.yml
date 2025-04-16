@@ -11,13 +11,16 @@ jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Generate
-        env:
-          NODE_ENV: production
-        run: cd ./web && npm i && npm run build
+        run: cd ./web && npm install && npm run build
 
       - name: Deploy hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
