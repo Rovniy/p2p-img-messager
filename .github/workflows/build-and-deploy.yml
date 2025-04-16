@@ -1,0 +1,124 @@
+name: Deploy WS server to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_telegram_bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        run: cd ./server && docker build . -t xploitravy/p2p_img_messager:latest -f ./Dockerfile
+
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Docker image to Docker Hub
+        run: docker push xploitravy/p2p_img_messager:latest
+
+  deploy_telegram_bot:
+    runs-on: ubuntu-latest
+    needs: build_telegram_bot
+
+    steps:
+      - name: Clone repo
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.BOT_SERVER_HOST }}
+          username: ${{ secrets.BOT_SERVER_USERNAME }}
+          key: ${{ secrets.BOT_SERVER_SSH_KEY }}
+          script: |
+            cd /home/p2p_img_messager
+            git pull https://Rovniy:${{ secrets.GIT_USER_TOKEN }}@github.com/Rovniy/p2p-img-messager.git
+
+      - name: Backup current Nginx configuration
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.BOT_SERVER_HOST }}
+          username: ${{ secrets.BOT_SERVER_USERNAME }}
+          key: ${{ secrets.BOT_SERVER_SSH_KEY }}
+          script: |
+            cp /etc/nginx/sites-available/msg.xploit.ltd /etc/nginx/sites-available/msg.xploit.ltd.backup
+
+      - name: Update Nginx configuration
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.BOT_SERVER_HOST }}
+          username: ${{ secrets.BOT_SERVER_USERNAME }}
+          key: ${{ secrets.BOT_SERVER_SSH_KEY }}
+          script: |
+            cp /home/p2p_img_messager/nginx.nginx /etc/nginx/sites-available/msg.xploit.ltd
+            ln -sf /etc/nginx/sites-available/msg.xploit.ltd /etc/nginx/sites-enabled/msg.xploit.ltd
+
+      - name: Test Nginx configuration
+        id: nginx_test
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.BOT_SERVER_HOST }}
+          username: ${{ secrets.BOT_SERVER_USERNAME }}
+          key: ${{ secrets.BOT_SERVER_SSH_KEY }}
+          script: |
+            sudo nginx -t || (echo "Nginx configuration test failed" && exit 1)
+
+      - name: Restore previous Nginx configuration if test fails
+        if: failure()
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.BOT_SERVER_HOST }}
+          username: ${{ secrets.BOT_SERVER_USERNAME }}
+          key: ${{ secrets.BOT_SERVER_SSH_KEY }}
+          script: |
+            cp /etc/nginx/sites-available/msg.xploit.ltd.backup /etc/nginx/sites-available/msg.xploit.ltd
+            sudo nginx -t && sudo systemctl restart nginx
+
+      - name: Restart Nginx
+        if: success() && steps.nginx_test.outcome == 'success'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.BOT_SERVER_HOST }}
+          username: ${{ secrets.BOT_SERVER_USERNAME }}
+          key: ${{ secrets.BOT_SERVER_SSH_KEY }}
+          script: |
+            sudo systemctl restart nginx
+
+      - name: Clean Docker images and volumes
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.BOT_SERVER_HOST }}
+          username: ${{ secrets.BOT_SERVER_USERNAME }}
+          key: ${{ secrets.BOT_SERVER_SSH_KEY }}
+          script: |
+            docker system prune -a -f
+
+      - name: Restart Docker containers
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.BOT_SERVER_HOST }}
+          username: ${{ secrets.BOT_SERVER_USERNAME }}
+          key: ${{ secrets.BOT_SERVER_SSH_KEY }}
+          script: |
+            cd /home/p2p_img_messager
+            docker-compose stop p2p_img_messager
+            docker-compose pull p2p_img_messager
+            docker-compose up -d
+
+      - name: Checkout repository again
+        uses: actions/checkout@v2
+
+      - name: Send Discord notification
+        run: |
+          LAST_COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          curl -s -X POST -H "Content-Type: application/json" \
+            -d "{\"content\": \"p2p img messenger successfully updated! Commit: $LAST_COMMIT_MESSAGE\"}" \
+            ${{ secrets.DISCORD_WEBHOOK_URL }}

@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "p2p-img-messager",
+    "prod": "p2p-img-messager",
+    "dev": "p2p-img-messager"
+  }
+}

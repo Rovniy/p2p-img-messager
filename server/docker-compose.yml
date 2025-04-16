@@ -1,0 +1,15 @@
+version: '3.8'
+
+networks:
+  p2p_img_messager_network:
+
+services:
+  p2p_img_messager:
+    working_dir: /app
+    container_name: p2p_img_messager
+    image: xploitravy/p2p_img_messager:latest
+    networks:
+      - p2p_img_messager_network
+    ports:
+      - "3060:3001"
+    restart: always

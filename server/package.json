@@ -1,0 +1,8 @@
+{
+  "name": "p2p-msg-messager-server",
+  "version": "1.0.0",
+  "description": "Private file sharing site",
+  "dependencies": {
+    "ws": "^8.18.1"
+  }
+}
