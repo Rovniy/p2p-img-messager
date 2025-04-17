@@ -6,7 +6,7 @@ export function useWebSocket(roomId, onMessage) {
     const isConnected = ref(false)
 
     function connect() {
-        socket.value = new WebSocket('ws://p2p-msg-api.xploit.ltd')
+        socket.value = new WebSocket('wss://p2p-msg-api.xploit.ltd')
 
         socket.value.addEventListener('open', () => {
             socket.value.send(JSON.stringify({ type: 'join', roomId }))
