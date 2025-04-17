@@ -44,7 +44,6 @@
             class="mb-2"
             style="width: 100%"
         />
-
         <div v-if="sendingProgress === 100" class="text-white mt-2">
           ✅ Photo sent successfully
         </div>
@@ -57,11 +56,10 @@
             class="mb-2"
             style="width: 100%"
         />
-
         <template v-if="receivedPhotos.length > 0">
           <v-img
-              v-for="item in receivedPhotos"
-              :key="Date.now()"
+              v-for="(item, index) in receivedPhotos"
+              :key="index"
               :src="item"
               class="mt-4"
               width="100%"
