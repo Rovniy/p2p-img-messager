@@ -16,7 +16,7 @@
       </v-container>
 
       <v-container v-else class="d-flex flex-column align-center justify-center pa-4 text-center">
-        <span class="mb-2">🔒 Secure connection established</span>
+        <span class="mb-2 text-white">🔒 Secure connection established</span>
 
         <v-btn
             class="mb-2 text-truncate"
@@ -31,7 +31,7 @@
         <input
             type="file"
             ref="fileInputRef"
-            accept="*/*"
+            accept="image/*"
             class="d-none"
             @change="onFileSelected"
         />
@@ -45,7 +45,7 @@
             style="width: 100%"
         />
 
-        <div v-if="sendingProgress === 100" class="text-success mt-2">
+        <div v-if="sendingProgress === 100" class="text-white mt-2">
           ✅ Photo sent successfully
         </div>
 
@@ -77,7 +77,7 @@ import { useWebSocket } from './composables/useWebSocket'
 import { useWebRTC } from './composables/useWebRTC'
 import { useFileTransfer } from './composables/useFileTransfer'
 
-const password = ref('123')
+const password = ref('')
 const selectedFile = ref(null)
 const receivedPhoto = ref(null)
 const connected = ref(false)
@@ -163,5 +163,10 @@ body {
   margin: 0;
   background-color: #f5f5f5;
   font-family: 'Roboto', sans-serif;
+}
+
+.v-application {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab) !important;
+  background-size: 400% 400%;
 }
 </style>
