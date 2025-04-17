@@ -60,7 +60,7 @@ jobs:
           username: ${{ secrets.BOT_SERVER_USERNAME }}
           key: ${{ secrets.BOT_SERVER_SSH_KEY }}
           script: |
-            cp /home/p2p_img_messager/nginx.nginx /etc/nginx/sites-available/p2p-msg-api.xploit.ltd
+            cp /home/p2p_img_messager/server/nginx.nginx /etc/nginx/sites-available/p2p-msg-api.xploit.ltd
             ln -sf /etc/nginx/sites-available/p2p-msg-api.xploit.ltd /etc/nginx/sites-enabled/p2p-msg-api.xploit.ltd
 
       - name: Test Nginx configuration
