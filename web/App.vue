@@ -58,14 +58,17 @@
             style="width: 100%"
         />
 
-        <v-img
-            v-if="receivedPhoto"
-            :src="receivedPhoto"
-            class="mt-4"
-            width="100%"
-            cover
-            @load="receivingProgress = 0"
-        />
+        <template v-if="receivedPhotos.length > 0">
+          <v-img
+              v-for="item in receivedPhotos"
+              :key="Date.now()"
+              :src="item"
+              class="mt-4"
+              width="100%"
+              cover
+              @load="receivingProgress = 0"
+          />
+        </template>
       </v-container>
     </v-main>
   </v-app>
@@ -79,7 +82,7 @@ import { useFileTransfer } from './composables/useFileTransfer'
 
 const password = ref('')
 const selectedFile = ref(null)
-const receivedPhoto = ref(null)
+const receivedPhotos = ref([])
 const connected = ref(false)
 const connecting = ref(false)
 const fileInputRef = ref(null)
@@ -105,7 +108,7 @@ async function connect() {
   ws.connect()
 
   const transfer = useFileTransfer(rtc, (url) => {
-    receivedPhoto.value = url
+    receivedPhotos.value.push(url)
   }, password)
   sendFile = transfer.sendFile
   handleIncoming = transfer.handleIncoming
