@@ -1,4 +1,4 @@
-export function useWebRTC(sendSignal, onData) {
+export function useWebRTC(sendSignal, onData, onReady) {
     let peer = null
     let dataChannel = null
     let remoteDescriptionSet = false
@@ -47,6 +47,8 @@ export function useWebRTC(sendSignal, onData) {
 
         dataChannel.onopen = () => {
             console.log('🟢 Data channel open')
+
+            if (onReady) onReady()
         }
 
         dataChannel.onmessage = event => {

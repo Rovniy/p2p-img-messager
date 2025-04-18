@@ -1,13 +1,15 @@
 <template>
   <v-app>
     <v-main class="d-flex align-center justify-center" style="min-height: 100vh">
-      <v-container v-if="!connected" class="d-flex align-center justify-center pa-4" style="height: 100vh">
+      <v-container v-if="!connected && !channelReady" class="d-flex align-center justify-center pa-4" style="height: 100vh">
         <v-card class="pa-4 text-center w-100" elevation="8">
           <h2 class="mb-4">Andrei ❤️ Maria</h2>
           <v-text-field
               v-model="password"
               label="Enter shared password"
               type="password"
+              clearable
+              @click:clear="cancelConnect"
           />
           <v-btn :disabled="connecting" color="primary" block @click="connect">
             {{ connecting ? 'Waiting for soulmate...' : 'Connect to soulmate' }}
@@ -15,7 +17,11 @@
         </v-card>
       </v-container>
 
-      <v-container v-else class="d-flex flex-column align-center justify-center pa-4 text-center">
+      <v-container v-if="!channelReady && connected" class="d-flex flex-column align-center justify-center pa-4 text-center">
+        Connections...
+      </v-container>
+
+      <v-container v-if="channelReady && connected" class="d-flex flex-column align-center justify-center pa-4 text-center">
         <span class="mb-2 text-white">🔒 Secure connection established</span>
 
         <v-btn
@@ -107,8 +113,17 @@ let hasCreatedConnection = false
 let sendingProgress = ref(0)
 let receivingProgress = ref(0)
 let reactionData = ref(null)
+let channelReady = ref(false)
 
 let sendFile, handleIncoming
+
+function cancelConnect() {
+  password.value = ''
+  selectedFile.value = false
+  receivedPhotos.value = []
+  connected.value = false
+  connecting.value = false
+}
 
 async function connect() {
   if (!password.value) return
@@ -117,7 +132,7 @@ async function connect() {
   const hashed = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password.value))
   const roomId = Array.from(new Uint8Array(hashed)).map(b => b.toString(16).padStart(2, '0')).join('')
 
-  rtc = useWebRTC((data) => ws.send({ type: 'signal', data }), handleRTCData)
+  rtc = useWebRTC((data) => ws.send({ type: 'signal', data }), handleRTCData, onChannelReady)
   ws = useWebSocket(roomId, handleMessage)
   ws.connect()
 
@@ -128,6 +143,10 @@ async function connect() {
   handleIncoming = transfer.handleIncoming
   watch(transfer.sendingProgress, (val) => (sendingProgress.value = val))
   watch(transfer.receivingProgress, (val) => (receivingProgress.value = val))
+}
+
+function onChannelReady() {
+  channelReady.value = true
 }
 
 function handleMessage(data) {

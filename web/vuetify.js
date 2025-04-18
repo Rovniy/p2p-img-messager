@@ -7,4 +7,7 @@ import * as directives from 'vuetify/directives'
 export default createVuetify({
     components,
     directives,
+    icons: {
+        defaultSet: 'mdi', // по умолчанию Vuetify уже поддерживает 'mdi'
+    },
 })
