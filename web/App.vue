@@ -9,8 +9,8 @@
               label="Enter shared password"
               type="password"
           />
-          <v-btn :loading="connecting" :disabled="connecting" color="primary" block @click="connect">
-            {{ connecting ? 'Connecting...' : 'Connect to soulmate' }}
+          <v-btn :disabled="connecting" color="primary" block @click="connect">
+            {{ connecting ? 'Waiting for soulmate...' : 'Connect to soulmate' }}
           </v-btn>
         </v-card>
       </v-container>
@@ -67,6 +67,19 @@
               @load="receivingProgress = 0"
           />
         </template>
+
+
+        <v-row class="align-center justify-center pa-4 text-center mb-4 reaction_btns">
+          <v-btn
+              variant="text"
+              v-for="item in Object.keys(REACTION_MAP)"
+              @click="() => sendReaction(item)"
+              class="ma-2">
+            {{ REACTION_MAP[item] }}
+          </v-btn>
+        </v-row>
+
+        <Reaction :data="reactionData" />
       </v-container>
     </v-main>
   </v-app>
@@ -74,9 +87,11 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import Reaction from './components/reaction.vue'
 import { useWebSocket } from './composables/useWebSocket'
 import { useWebRTC } from './composables/useWebRTC'
 import { useFileTransfer } from './composables/useFileTransfer'
+import { REACTION_MAP } from './config'
 
 const password = ref('')
 const selectedFile = ref(null)
@@ -91,6 +106,7 @@ let hasCreatedConnection = false
 
 let sendingProgress = ref(0)
 let receivingProgress = ref(0)
+let reactionData = ref(null)
 
 let sendFile, handleIncoming
 
@@ -136,12 +152,20 @@ function handleMessage(data) {
   }
 }
 
-function handleRTCData(data) {
-  handleIncoming(data)
+async function handleRTCData(data) {
+  const msg = await handleIncoming(data)
+  if (!msg?.type) return
+
+  if (msg.type === 'reaction') {
+    if (!msg?.data) return
+
+    reactionData.value = msg
+  }
 }
 
 function handleFile() {
   if (!selectedFile.value) return
+
   sendingProgress.value = 0
   sendFile(selectedFile.value)
 }
@@ -152,10 +176,19 @@ function triggerFileSelect() {
 
 function onFileSelected(event) {
   const file = event.target?.files?.[0]
+
   if (file) {
     selectedFile.value = file
     handleFile()
   }
+}
+function sendReaction(reactionData) {
+  const message = JSON.stringify({
+    type: 'reaction',
+    data: reactionData
+  })
+
+  rtc.send(message)
 }
 </script>
 
@@ -169,5 +202,11 @@ body {
 .v-application {
   background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab) !important;
   background-size: 400% 400%;
+}
+
+.reaction_btns {
+  .v-btn {
+    font-size: 24px;
+  }
 }
 </style>

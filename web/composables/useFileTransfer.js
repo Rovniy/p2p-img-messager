@@ -69,6 +69,14 @@ export function useFileTransfer(rtc, onReceiveComplete, passwordRef) {
                     receivedBytes = 0
                     expectedSize = parsed.size
                     receivingProgress.value = 0
+                } else {
+                    return parsed
+                }
+
+                if (parsed.type === 'reaction') {
+                    console.log('message', parsed?.data || 'No data')
+
+                    return parsed
                 }
             } catch (_) {}
         } else if (fileMeta) {
