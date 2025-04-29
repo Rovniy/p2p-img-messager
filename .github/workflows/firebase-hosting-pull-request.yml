@@ -36,5 +36,5 @@ jobs:
         run: |
           LAST_COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           curl -s -X POST -H "Content-Type: application/json" \
-            -d "{\"content\": \"💵 [BountyHunter](https://bountyhub.gg) deployed! Commit: **$LAST_COMMIT_MESSAGE**\"}" \
+            -d "{\"content\": \"❤️ p2p img messenger deployed! Commit: **$LAST_COMMIT_MESSAGE**\"}" \
             ${{ secrets.DISCORD_WEBHOOK_URL }}

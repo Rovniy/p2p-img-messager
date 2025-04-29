@@ -100,7 +100,7 @@ import { useWebRTC } from './composables/useWebRTC'
 import { useFileTransfer } from './composables/useFileTransfer'
 import { REACTION_MAP } from './config'
 
-const password = ref('1')
+const password = ref('')
 const selectedFile = ref(null)
 const receivedPhotos = ref([])
 const connected = ref(false)
@@ -156,11 +156,7 @@ async function connect() {
   ws.connect()
 
   watch(ws.isConnected, val => {
-    console.log('123123123', val);
-
     if (val) {
-      console.log(2132323);
-
       reactionData.value = {
         type: 'reaction',
         data: 'wss'
