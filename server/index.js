@@ -10,6 +10,8 @@ const rooms = {} // { roomId: [client1, client2] }
 wss.on('connection', (ws) => {
     let currentRoom = null
 
+    console.log('New connection')
+
     ws.on('message', (message) => {
         let data
         try {
@@ -18,16 +20,22 @@ wss.on('connection', (ws) => {
             return
         }
 
+        console.log('Income message:', data)
+
         if (data.type === 'join') {
             const { roomId } = data
             currentRoom = roomId
+
             if (!rooms[roomId]) rooms[roomId] = []
             rooms[roomId].push(ws)
 
             // Отправляем peer-joined только ВТОРОМУ клиенту
             if (rooms[roomId].length === 2) {
                 const firstClient = rooms[roomId][0]
+
                 if (firstClient.readyState === WebSocket.OPEN) {
+                    console.log('Peer joined', roomId)
+
                     firstClient.send(JSON.stringify({ type: 'peer-joined' }))
                 }
             }
@@ -44,6 +52,8 @@ wss.on('connection', (ws) => {
     })
 
     ws.on('close', () => {
+        console.log('Connection closed')
+
         if (currentRoom && rooms[currentRoom]) {
             rooms[currentRoom] = rooms[currentRoom].filter(c => c !== ws)
             if (rooms[currentRoom].length === 0) {

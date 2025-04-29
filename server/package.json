@@ -2,6 +2,9 @@
   "name": "p2p-msg-messager-server",
   "version": "1.0.0",
   "description": "Private file sharing site",
+  "scripts": {
+    "dev": "node index.js"
+  },
   "dependencies": {
     "ws": "^8.18.1"
   }

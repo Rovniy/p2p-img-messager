@@ -63,6 +63,7 @@ export function useFileTransfer(rtc, onReceiveComplete, passwordRef) {
         if (typeof data === 'string') {
             try {
                 const parsed = JSON.parse(data)
+
                 if (parsed.type === 'file-meta') {
                     fileMeta = parsed
                     receiveBuffer = []
@@ -75,6 +76,12 @@ export function useFileTransfer(rtc, onReceiveComplete, passwordRef) {
 
                 if (parsed.type === 'reaction') {
                     console.log('message', parsed?.data || 'No data')
+
+                    return parsed
+                }
+
+                if (parsed.type === 'imageReceived') {
+                    console.log('imageReceived full')
 
                     return parsed
                 }

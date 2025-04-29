@@ -5,7 +5,7 @@ export function useWebSocket(roomId, onMessage) {
     const socket = ref(null)
     const isConnected = ref(false)
 
-    function connect() {
+    function connect(onOpen) {
         socket.value = new WebSocket('wss://p2p-msg-api.xploit.ltd')
 
         socket.value.addEventListener('open', () => {

@@ -1,7 +1,7 @@
 <template>
   <v-app>
-    <v-main class="d-flex align-center justify-center" style="min-height: 100vh">
-      <v-container v-if="!connected && !channelReady" class="d-flex align-center justify-center pa-4" style="height: 100vh">
+    <v-main style="min-height: 100vh">
+      <v-container v-if="!connected && !channelReady" class="pa-4" style="height: 100vh">
         <v-card class="pa-4 text-center w-100" elevation="8">
           <h2 class="mb-4">Andrei ❤️ Maria</h2>
           <v-text-field
@@ -50,9 +50,9 @@
             class="mb-2"
             style="width: 100%"
         />
-        <div v-if="sendingProgress === 100" class="text-white mt-2">
-          ✅ Photo sent successfully
-        </div>
+
+        <!-- STATUS -->
+        <div class="text-white mt-2" v-html="imageTransferStatus" />
 
         <v-progress-linear
             v-if="receivingProgress > 0 && receivingProgress < 100"
@@ -62,6 +62,7 @@
             class="mb-2"
             style="width: 100%"
         />
+
         <template v-if="receivedPhotos.length > 0">
           <v-img
               v-for="(item, index) in receivedPhotos"
@@ -74,48 +75,66 @@
           />
         </template>
 
-
         <v-row class="align-center justify-center pa-4 text-center mb-4 reaction_btns">
           <v-btn
               variant="text"
-              v-for="item in Object.keys(REACTION_MAP)"
+              v-for="item in Object.keys(REACTION_MAP).filter(v => v !== 'wss')"
               @click="() => sendReaction(item)"
               class="ma-2">
             {{ REACTION_MAP[item] }}
           </v-btn>
         </v-row>
-
-        <Reaction :data="reactionData" />
       </v-container>
+
     </v-main>
+
+    <Reaction :data="reactionData" />
   </v-app>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import {computed, ref, watch} from 'vue'
 import Reaction from './components/reaction.vue'
 import { useWebSocket } from './composables/useWebSocket'
 import { useWebRTC } from './composables/useWebRTC'
 import { useFileTransfer } from './composables/useFileTransfer'
 import { REACTION_MAP } from './config'
 
-const password = ref('')
+const password = ref('1')
 const selectedFile = ref(null)
 const receivedPhotos = ref([])
 const connected = ref(false)
 const connecting = ref(false)
 const fileInputRef = ref(null)
+const sendingProgress = ref(0)
+const receivingProgress = ref(0)
+const reactionData = ref({})
+const channelReady = ref(false)
+const imageReceived = ref(false)
 
-let ws
-let rtc
-let hasCreatedConnection = false
+let ws, rtc, hasCreatedConnection = false, sendFile, handleIncoming
 
-let sendingProgress = ref(0)
-let receivingProgress = ref(0)
-let reactionData = ref(null)
-let channelReady = ref(false)
+const imageTransferStatus = computed(() => {
+  let status = '💦 Your turn to send photo!'
 
-let sendFile, handleIncoming
+  if (sendingProgress.value > 0 && sendingProgress.value < 100) {
+    status = '🌍 Sending...'
+  }
+  if (sendingProgress.value === 100 && imageReceived.value) {
+    status = '✅ Photo received'
+  }
+  if (receivingProgress.value > 0 && receivingProgress.value < 100) {
+    status = '🌍 Receiving...'
+  }
+  if (sendingProgress.value === 100) {
+    status = '⏰ Photo sent. Waiting for receive. Don\'t do anything'
+  }
+  if (receivingProgress.value === 100) {
+    status = '✅ Received'
+  }
+
+  return status
+})
 
 function cancelConnect() {
   password.value = ''
@@ -136,13 +155,49 @@ async function connect() {
   ws = useWebSocket(roomId, handleMessage)
   ws.connect()
 
+  watch(ws.isConnected, val => {
+    console.log('123123123', val);
+
+    if (val) {
+      console.log(2132323);
+
+      reactionData.value = {
+        type: 'reaction',
+        data: 'wss'
+      }
+    }
+  })
+
   const transfer = useFileTransfer(rtc, (url) => {
     receivedPhotos.value.push(url)
   }, password)
   sendFile = transfer.sendFile
   handleIncoming = transfer.handleIncoming
-  watch(transfer.sendingProgress, (val) => (sendingProgress.value = val))
-  watch(transfer.receivingProgress, (val) => (receivingProgress.value = val))
+
+  watch(transfer.sendingProgress, (val) => {
+    sendingProgress.value = val
+
+    if (val === 100) {
+      setTimeout(() => {
+        sendingProgress.value = 0
+      }, 5000)
+    }
+  })
+
+  watch(transfer.receivingProgress, (val) => {
+    receivingProgress.value = val
+
+    if (val === 100) {
+      imageReceived.value = false
+
+      const message = JSON.stringify({
+        type: 'imageReceived',
+        data: null
+      })
+
+      rtc.send(message)
+    }
+  })
 }
 
 function onChannelReady() {
@@ -180,12 +235,19 @@ async function handleRTCData(data) {
 
     reactionData.value = msg
   }
+
+  if (msg.type === 'imageReceived') {
+    console.log('app : imageReceived')
+
+    imageReceived.value = true
+  }
 }
 
 function handleFile() {
   if (!selectedFile.value) return
 
   sendingProgress.value = 0
+  imageReceived.value = false
   sendFile(selectedFile.value)
 }
 

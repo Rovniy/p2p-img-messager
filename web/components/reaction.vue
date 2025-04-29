@@ -19,15 +19,22 @@ import { REACTION_MAP } from '../config'
 const REPEAT_TIMES = 5
 
 const props = defineProps({
-  data: {type: Object, required: true}
+  data: {
+    type: Object,
+    required: true
+  }
 })
 
 const reactions = ref([])
 
 watch(
     () => props.data,
-    (newVal) => {
+    (newVal, oldValue) => {
+      console.log('newVal', newVal, oldValue);
+
       if (newVal && newVal.type === 'reaction') {
+
+
         for (let i = 0; i < REPEAT_TIMES; i++) {
           const id = Date.now().toString() + Math.random().toString(36).substring(2) + 'i'
           const x = Math.random() * 80 + 10 // horizontal position between 10% and 90%

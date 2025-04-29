@@ -3,4 +3,5 @@ export const REACTION_MAP = {
 	smile: '☺️',
 	impressive: '😍',
 	wow: '😲',
+	wss: '🫦',
 }
